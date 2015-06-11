@@ -6,8 +6,11 @@
     #include <cstdio>
     #include <cstring>
     #include <vector>
+    #include <map>
+    #include <string>
     #include <GL/gl.h>
     #include <GL/glu.h>
+    #include <cmath>
 
     #include "sdlglutils.h"
 
@@ -45,13 +48,18 @@
             vector <Pos2D> texPos;
             vector <Pos3D> normals;
             vector <Face_3D> faces;
+            map <string, Pos3D> grabPoint;
             Pos3D pos;
+            double ang_head;
+            double ang_left_arm;
+            double ang_right_arm;
+            double ang_foot;
 
         public:
             Obj_3D();
             Obj_3D(char *filename);
 
-            bool loadUsingFile(char *filename, unsigned char simplifyTimes);
+            bool loadUsingFile(char *filename);
             void draw();
 
             vector <Pos3D> getVertices();
@@ -62,7 +70,14 @@
             void setVertices(vector <Pos3D> _v);
             void setTexPos(vector <Pos2D> _t);
             void setNormals(vector <Pos3D> _n);
-            void simplify();
+            void setHeadAng(double ang);
+            void setLeftArmAng(double ang);
+            void setRightArmAng(double ang);
+            void setFootAng(double ang);
+            double getHeadAng();
+            double getLeftArmAng();
+            double getRightArmAng();
+            double getFootAng();
 
             ~Obj_3D();
     };

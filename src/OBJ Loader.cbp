@@ -55,11 +55,13 @@
 		<Unit filename="dessin.cpp" />
 		<Unit filename="dessin.h" />
 		<Unit filename="main.cpp" />
+		<Unit filename="objet3DStatique.cpp" />
+		<Unit filename="objet3DStatique.h" />
+		<Unit filename="scene.cpp" />
+		<Unit filename="scene.h" />
 		<Unit filename="sdlglutils.cpp" />
 		<Unit filename="sdlglutils.h" />
 		<Unit filename="vector3d.h" />
-		<Unit filename="water_object.cpp" />
-		<Unit filename="water_object.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

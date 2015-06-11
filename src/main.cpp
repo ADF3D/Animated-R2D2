@@ -9,6 +9,7 @@
 #include "FreeFlyCamera_object.h"
 #include "sdlglutils.h"
 #include "dessin.h"
+#include "scene.h"
 
 FreeFlyCamera *camera;
 
@@ -22,11 +23,14 @@ int main(int argc, char *argv[])
 
     bool continuer = true;
     SDL_Event event;
-    SDL_Surface *ecran = SDL_SetVideoMode(LARGEUR_FENETRE, HAUTEUR_FENETRE, 32, SDL_OPENGL);
+    SDL_Surface *ecran = SDL_SetVideoMode(LARGEUR_FENETRE, HAUTEUR_FENETRE, 32, SDL_OPENGL | SDL_HWACCEL | SDL_HWSURFACE | SDL_FULLSCREEN | SDL_DOUBLEBUF);
     Vector3D vec;
     Obj_3D cube;
+    Scene scene;
 
-    if (cube.loadUsingFile((char*)"3D_Obj/R2D2/R2D2.obj", 0) == false)
+    //scene.executer();
+
+    if (cube.loadUsingFile((char*)"3D_Obj/R2D2/R2D2.obj") == false)
     {
         exit(0);
     }
@@ -87,6 +91,9 @@ int main(int argc, char *argv[])
                 break;
             }
         }
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
 
         current_time = SDL_GetTicks();
         elapsed_time = current_time - last_time; //on calcule le temps écoulé depuis la dernière image

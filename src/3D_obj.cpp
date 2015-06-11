@@ -1,7 +1,5 @@
 #include "3D_obj.h"
 
-double ang = 0;
-
 Obj_3D::Obj_3D()
 {
 
@@ -9,18 +7,17 @@ Obj_3D::Obj_3D()
 
 Obj_3D::Obj_3D(char *filename)
 {
-    loadUsingFile(filename, 0);
+    loadUsingFile(filename);
 }
 
-bool Obj_3D::loadUsingFile(char *filename, unsigned char simplifyTimes)
+bool Obj_3D::loadUsingFile(char *filename)
 {
     FILE *obj = fopen(filename, "r");
     char categ[10] = "";
     double tab[3] = {0};
     Face_3D f;
     char str[100] = "";
-    char grp[10][100] = {""};
-    int cnt_grp = 0;
+    char grp[100] = "";
     int cnt = 0;
     GLuint tex;
 
@@ -71,12 +68,11 @@ bool Obj_3D::loadUsingFile(char *filename, unsigned char simplifyTimes)
                         break;
 
                     case 1:
-                        f.n[cnt] = atoi(strtmp);
                         f.t[cnt] = atoi(strtmp);
                         break;
 
                     case 2:
-                        f.t[cnt] = atoi(strtmp);
+                        f.n[cnt] = atoi(strtmp);
                         break;
                 }
 
@@ -91,7 +87,7 @@ bool Obj_3D::loadUsingFile(char *filename, unsigned char simplifyTimes)
 
             f.cnt = cnt + 1;
             f.tex = tex;
-            strcpy(f.g, grp[0]);
+            strcpy(f.g, grp);
 
             faces.push_back(f);
         }
@@ -102,165 +98,136 @@ bool Obj_3D::loadUsingFile(char *filename, unsigned char simplifyTimes)
             tex = loadTexture(str, true);
         }
 
-        else if(strcmp(categ, "g") == 0)
+        else if(strcmp(categ, "g") == 0 || strcmp(categ, "o") == 0)
         {
-            char *ptr = str + 1;
-            char *ptr2 = str + 1;
-            cnt_grp = 0;
-            fgets(str, 100, obj);
+            fscanf(obj, "%s", grp);
 
-            while((ptr2 = strpbrk(ptr, " \n")) != NULL)
+            if (strcmp(grp, "head") == 0)
             {
-                strncpy(grp[cnt_grp], ptr, ptr2 - ptr);
-
-                grp[cnt_grp][ptr2 - ptr] = '\0';
-
-                ptr = ptr2 + 1;
-
-                cnt_grp++;
+                grabPoint[grp] = (Pos3D){0, 1, 0};
             }
-        }
-    }
 
-    for (int i = 0 ; i < simplifyTimes ; i++)
-    {
-        simplify();
+            else if (strcmp(grp, "body") == 0)
+            {
+                grabPoint[grp] = (Pos3D){0, 0, 0};
+            }
+
+            else if (strcmp(grp, "left_arm_axis") == 0)
+            {
+                grabPoint[grp] = (Pos3D){-14, 1, 18};
+            }
+
+            else if (strcmp(grp, "right_arm_axis") == 0)
+            {
+                grabPoint[grp] = (Pos3D){14, 1, 18};
+            }
+
+            else if (strcmp(grp, "foot_axis") == 0)
+            {
+                grabPoint[grp] = (Pos3D){0, 0, 6};
+            }
+
+        }
     }
 
     return true;
 }
 
-void Obj_3D::simplify()
-{
-    vector<Face_3D> f;
-    Face_3D tmp;
-
-    for(unsigned int i = 0 ; i < faces.size() - 1 ; i+=2)
-    {
-        unsigned int sz = faces[i].cnt;
-        tmp.cnt = 4;
-        tmp.tex = faces[i].tex;
-        strcpy(tmp.g, faces[i].g);
-
-        if (sz < faces[i+1].cnt)
-            sz = faces[i+1].cnt;
-
-        for(unsigned int j = 0 ; j < 4 ; j++)
-        {
-            tmp.v[j] = faces[i + (j > 1)].v[j % sz];
-            tmp.t[j] = faces[i + (j > 1)].v[j % sz];
-            tmp.n[j] = faces[i + (j > 1)].v[j % sz];
-        }
-
-        f.push_back(tmp);
-    }
-
-    while(faces.size() > 0)
-        faces.pop_back();
-
-    while(f.size() > 0)
-    {
-        faces.push_back(f[f.size() - 1]);
-        f.pop_back();
-    }
-}
-
 void Obj_3D::draw()
 {
-    GLfloat lightColor0[] = {1.0f, 1.0f, 1.0f, 1.0f};    // Color (0.5, 0.5, 0.5)
-	GLfloat lightPos0[] = {15.0f, 15.0f, 15.0f, 0.0f};      // Positioned at (4, 0, 8)
 
-    // Ajout lumière positionnelle L0
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor0);        // lumière diffuse
-    glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 1.0);
-    glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);         // position
-    glColor3ub(255, 255, 255);
-    ang = 0.01 * SDL_GetTicks();
+    static double ang = 0;
+    register unsigned int i = 0, j = 0;
+
+    ang+= 5;
 
     glPushMatrix();
-    glTranslated(lightPos0[0], lightColor0[1], lightPos0[2]);
-    glBegin(GL_QUADS);
-        glVertex3d(1, 1, 1);
-        glVertex3d(-1, 1, 1);
-        glVertex3d(-1, -1, 1);
-        glVertex3d(1, -1, 1);
-        glVertex3d(1, 1, 1);
-        glVertex3d(-1, 1, 1);
-        glVertex3d(-1, 1, -1);
-        glVertex3d(1, 1, -1);
-        glVertex3d(1, 1, 1);
-        glVertex3d(1, -1, 1);
-        glVertex3d(1, -1, -1);
-        glVertex3d(1, 1, -1);
-    glEnd();
-    glPopMatrix();
-    for (unsigned int i = 0 ; i < faces.size() ; i++)
-    {
-        glBindTexture(GL_TEXTURE_2D, faces[i].tex);
+    glTranslated(pos.x, pos.y, pos.z);
 
+    glBindTexture(GL_TEXTURE_2D, faces[0].tex);
+
+    for (i = 0 ; i < faces.size() ; i++)
+    {
         glPushMatrix();
 
-        if (strcmp(faces[i].g, "head") == 0)
+        glTranslated(grabPoint[faces[i].g].x, grabPoint[faces[i].g].y, grabPoint[faces[i].g].z);
+
+        glBegin(GL_TRIANGLES);
+
+        if(strcmp(faces[i].g, "head") == 0)
         {
-            glTranslated(vertices[0].x, vertices[0].y, vertices[0].z);
-            glRotated(ang , 0, 0, 1);
+            glRotated(ang_head, 0, 0, 1);
         }
 
-        else if (strcmp(faces[i].g, "body") == 0)
+        else if(strcmp(faces[i].g, "left_arm_axis") == 0)
         {
-            /*glRotated(ang , 0, 0, 1);
-            glTranslated(vertices[0].x, vertices[0].y, vertices[0].z);*/
+            glRotated(ang_left_arm, 0, 0, 1);
         }
 
-        else if (strcmp(faces[i].g, "left_arm_axis") == 0)
+        else if(strcmp(faces[i].g, "right_arm_axis") == 0)
         {
-            glRotated(ang + 90 , 1, 0, 0);
-            glTranslated(vertices[0].x, vertices[0].y, vertices[0].z);
+            glRotated(ang_right_arm, 0, 0, 1);
         }
 
-        else if (strcmp(faces[i].g, "right_arm_axis") == 0)
+        else if(strcmp(faces[i].g, "foot_axis") == 0)
         {
-            glRotated(ang + 180 , 1, 0, 0);
-            glTranslated(vertices[0].x, vertices[0].y, vertices[0].z);
+            glRotated(ang_foot, 0, 0, 1);
         }
 
-        else if (strcmp(faces[i].g, "foot_axis") == 0)
+
+        for (j = 0 ; j < faces[i].cnt ; j++)
         {
-            glRotated(ang , 1, 0, 0);
-            glTranslated(vertices[0].x, vertices[0].y, vertices[0].z);
-        }
-
-        else
-        {
-            glTranslated(vertices[0].x, vertices[0].y, vertices[0].z);
-        }
-
-        if(faces[i].cnt == 3)
-            glBegin(GL_LINE_LOOP);
-
-        else
-            glBegin(GL_QUADS);
-
-        for (unsigned int j = 0 ; j < faces[i].cnt ; j++)
-        {
-            if (faces[i].t[j] > 0 && texPos.size() > faces[i].t[j])
-                glTexCoord2d(texPos[faces[i].t[j] - 1].x, texPos[faces[i].t[j] - 1].y);
-
-            if (faces[i].t[j] > 0 && normals.size() > faces[i].t[j])
-                glNormal3d(normals[faces[i].t[j] - 1].x, normals[faces[i].t[j] - 1].y, normals[faces[i].t[j] - 1].z);
-
-            glVertex3d(vertices[faces[i].v[j] - 1].x - vertices[0].x, vertices[faces[i].v[j] - 1].y  - vertices[0].y, vertices[faces[i].v[j] - 1].z - vertices[0].z);
+            glTexCoord2d(texPos[faces[i].t[j] - 1].x,texPos[faces[i].t[j] - 1].y);
+            glNormal3d(normals[faces[i].n[j] - 1].x, normals[faces[i].n[j] - 1].y, normals[faces[i].n[j] - 1].z);
+            glVertex3d(vertices[faces[i].v[j] - 1].x - grabPoint[faces[i].g].x, vertices[faces[i].v[j] - 1].y  - grabPoint[faces[i].g].y, vertices[faces[i].v[j] - 1].z - grabPoint[faces[i].g].z);
         }
 
         glEnd();
 
         glPopMatrix();
-
-        /*glFlush();
-        SDL_GL_SwapBuffers();*/
     }
 
     glPopMatrix();
+}
+
+void Obj_3D::setHeadAng(double ang)
+{
+    ang_head = ang;
+}
+
+void Obj_3D::setLeftArmAng(double ang)
+{
+    ang_left_arm = ang;
+}
+
+void Obj_3D::setRightArmAng(double ang)
+{
+    ang_right_arm = ang;
+}
+
+void Obj_3D::setFootAng(double ang)
+{
+    ang_foot = ang;
+}
+
+double Obj_3D::getHeadAng()
+{
+    return ang_head;
+}
+
+double Obj_3D::getLeftArmAng()
+{
+    return ang_left_arm;
+}
+
+double Obj_3D::getRightArmAng()
+{
+    return ang_right_arm;
+}
+
+double Obj_3D::getFootAng()
+{
+    return ang_foot;
 }
 
 vector <Pos3D> Obj_3D::getVertices()
